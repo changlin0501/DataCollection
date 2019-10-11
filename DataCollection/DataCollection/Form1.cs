@@ -24,22 +24,11 @@ namespace DataCollection
 	public partial class Form1 : Form
 	{
 		private MqttClient mqttClient = null;
-		//温度4个地址
-		double Temperature01 = 0;
-		double Temperature02 = 0;
-		double Temperature03 = 0;
-		double Temperature04 = 0;
-
-		//压力4个地址
-		double Pressure01 = 0;
-		double Pressure02 = 0;
-		double Pressure03 = 0;
-		double Pressure04 = 0;
-
-		//电压2个地址
-		decimal Voltage01 = 0;
-		decimal Voltage02 = 0;
-
+		double Temperature = 0;
+		double Pressure = 0;
+		double Voltage = 0;
+		string GalvanicCurrent = null;
+		//string MachineAirPressure = null;
 
 		public Form1()
 		{
@@ -123,7 +112,7 @@ namespace DataCollection
 					//sp.Parity = System.IO.Ports.Parity.Even;
 					#endregion
 				});
-				//Modbus_dianya.Open();
+
 				VoltageValue();
 			}
 			catch (Exception ex)
@@ -180,7 +169,6 @@ namespace DataCollection
 		{
 			Invoke((new Action(() =>
 			{
-
 				Common.LogHandler.WriteLog("已连接到MQTT服务器！" + Environment.NewLine);
 			})));
 		}
@@ -412,28 +400,28 @@ namespace DataCollection
 
 					//温度(0-300)1路
 					decimal ElectricCurrent_d1 = Math.Round(((decimal)wd_d1 / 1000), 2);
-					Temperature01 = h * (double)ElectricCurrent_d1 + j;
+					double Temperature01 = h * (double)ElectricCurrent_d1 + j;
 					double Temperature_01 = ((double)(ElectricCurrent_d1 - 4) * 300) / 16;
 					Console.WriteLine(Temperature01);
 					Console.WriteLine(Temperature_01);
 
 					//温度(0-300)2路
 					decimal ElectricCurrent_d2 = Math.Round(((decimal)wd_d2 / 1000), 2);
-					Temperature02 = h * (double)ElectricCurrent_d2 + j;
+					double Temperature02 = h * (double)ElectricCurrent_d2 + j;
 					double Temperature_02 = ((double)(ElectricCurrent_d2 - 4) * 300) / 16;
 					Console.WriteLine(Temperature02);
 					Console.WriteLine(Temperature_02);
 
 					//温度(0-1000)3路
 					decimal ElectricCurrent_d3 = Math.Round(((decimal)wd_d3 / 1000), 2);
-					Temperature03 = y * (double)ElectricCurrent_d3 + z;
+					double Temperature03 = y * (double)ElectricCurrent_d3 + z;
 					double Temperature_03 = ((double)(ElectricCurrent_d3 - 4) * 300) / 16;
 					Console.WriteLine(Temperature03);
 					Console.WriteLine(Temperature_03);
 
 					//温度(0-1000)4路
 					decimal ElectricCurrent_d4 = Math.Round(((decimal)wd_d4 / 1000), 2);
-					Temperature04 = y * (double)ElectricCurrent_d4 + z;
+					double Temperature04 = y * (double)ElectricCurrent_d4 + z;
 					double Temperature_04 = ((double)(ElectricCurrent_d4 - 4) * 300) / 16;
 					Console.WriteLine(Temperature04);
 					Console.WriteLine(Temperature_04);
@@ -488,35 +476,36 @@ namespace DataCollection
 					double Pressure_d2 = Convert.ToInt32(Pressure_h2, 16);
 					double Pressure_d3 = Convert.ToInt32(Pressure_h3, 16);
 					double Pressure_d4 = Convert.ToInt32(Pressure_h4, 16);
-
+					
 					//量程（0-1Mpa）1路
-					decimal PressureElectricCurrent_d1 = Math.Round(((decimal)Pressure_d1 / 1000), 2);
-					Pressure01 = f * (double)PressureElectricCurrent_d1 + g;
-					double Pressure_01 = ((double)PressureElectricCurrent_d1 - 4) / 16;
+					decimal ElectricCurrent_d1 = Math.Round(((decimal)Pressure_d1 / 1000), 2);
+					double Pressure01 = f * (double)ElectricCurrent_d1 + g;
+					double Pressure_01 = ((double)ElectricCurrent_d1 - 4) / 16;
 					Console.WriteLine(Pressure01);
 					Console.WriteLine(Pressure_01);
 
 					//量程（0-1Mpa）2路
-					decimal PressureElectricCurrent_d2 = Math.Round(((decimal)Pressure_d2 / 1000), 2);
-					Pressure02 = f * (double)PressureElectricCurrent_d2 + g;
-					double Pressure_02 = ((double)PressureElectricCurrent_d2 - 4) / 16;
+					decimal ElectricCurrent_d2 = Math.Round(((decimal)Pressure_d2 / 1000), 2);
+					double Pressure02 = f * (double)ElectricCurrent_d2 + g;
+					double Pressure_02 = ((double)ElectricCurrent_d2 - 4) / 16;
 					Console.WriteLine(Pressure02);
 					Console.WriteLine(Pressure_02);
 
 
 					//量程（0-30Mpa）3路
-					decimal PressureElectricCurrent_d3 = Math.Round(((decimal)Pressure_d3 / 1000), 2);
-					Pressure03 = a * (double)PressureElectricCurrent_d2 + c;
-					double Pressure_03 = ((double)PressureElectricCurrent_d2 - 4) * 30 / 16;
+					decimal ElectricCurrent_d3 = Math.Round(((decimal)Pressure_d3 / 1000), 2);
+					double Pressure03 = a * (double)ElectricCurrent_d3 + c;
+					double Pressure_03 = ((double)ElectricCurrent_d3 - 4) * 30 / 16;
 					Console.WriteLine(Pressure03);
 					Console.WriteLine(Pressure_03);
 
 					//量程（0-30Mpa）4路
-					decimal PressureElectricCurrent_d4 = Math.Round(((decimal)Pressure_d3 / 1000), 2);
-					Pressure04 = a * (double)PressureElectricCurrent_d4 + c;
-					double Pressure_04 = ((double)(PressureElectricCurrent_d4 - 4) * 30) / 16;
+					decimal ElectricCurrent_d4 = Math.Round(((decimal)Pressure_d3 / 1000), 2);
+					double Pressure04 = a * (double)ElectricCurrent_d4 + c;
+					double Pressure_04 = ((double)(ElectricCurrent_d4 - 4) * 30 )/ 16;
 					Console.WriteLine(Pressure04);
 					Console.WriteLine(Pressure_04);
+
 				}
 				else
 				{
@@ -537,7 +526,7 @@ namespace DataCollection
 			try
 			{
 				//电压地址
-				OperateResult<byte[]> read_3 = Modbus_dianya.ReadBase(HslCommunication.Serial.SoftCRC16.CRC16(HslCommunication.BasicFramework.SoftBasic.HexStringToBytes("01 03 01 6e 00 02")));
+				OperateResult<byte[]> read_3 = busRtuClient.ReadBase(HslCommunication.Serial.SoftCRC16.CRC16(HslCommunication.BasicFramework.SoftBasic.HexStringToBytes("01 03 01 6e 00 02")));
 				if (read_3.IsSuccess)
 				{
 					string Voltage = HslCommunication.BasicFramework.SoftBasic.ByteToHexString(read_3.Content, ' ');
@@ -559,23 +548,9 @@ namespace DataCollection
 					string Voltage_h3 = Voltage_str5 + Voltage_str6;
 					string Voltage_h4 = Voltage_str7 + Voltage_str8;
 
-					//高位字和低位字
-					string Voltage_h5 = Voltage_h1 + Voltage_h2;
-					string Voltage_h6 = Voltage_h3 + Voltage_h4;
-
-
 					//16进制转10进制
-					double Voltage_d1 = Convert.ToInt32(Voltage_h5, 16);
-					double Voltage_d2 = Convert.ToInt32(Voltage_h6, 16);
-					//double Voltage_d3 = Convert.ToInt32(Voltage_h3, 16);
-					//double Voltage_d4 = Convert.ToInt32(Voltage_h4, 16);
-
-					//电压值（1路）
-					Voltage01 = Math.Round(((decimal)Voltage_d1 / 10000), 2);
-					Console.WriteLine(Voltage_d1);
-
-					//电压值（2路）
-					Voltage02 = Math.Round(((decimal)Voltage_d2 / 10000), 2);
+					double Voltage_d1 = Convert.ToInt32(Voltage_h3, 16);
+					decimal Voltage_d2 = Math.Round(((decimal)Voltage_d1 / 10000), 2);
 					Console.WriteLine(Voltage_d2);
 				}
 				else
