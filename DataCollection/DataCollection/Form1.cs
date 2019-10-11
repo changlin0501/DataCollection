@@ -24,7 +24,9 @@ namespace DataCollection
 	public partial class Form1 : Form
 	{
 		private MqttClient mqttClient = null;
-		double temperature1 = 0;
+		double Temperature = 0;
+		double Pressure = 0;
+		double Voltage = 0;
 		string GalvanicCurrent = null;
 		//string MachineAirPressure = null;
 
@@ -45,9 +47,17 @@ namespace DataCollection
 		private long sendDataTimeInterval = 0;
 
 
-		//温度量程(-50-+100)
+		//温度量程(-50-+100)   测试
 		double k = 9.375;
 		double b = -87.5;
+
+		//温度量程(0-+300)
+		double h = 18.75;
+		double j = -75;
+
+		//温度量程(0-+1000)
+		double y = 62.5;
+		double z = -250;
 
 		//压力量程（0-1Mpa）
 		double a = 16;
@@ -56,6 +66,61 @@ namespace DataCollection
 		//压力量程（0-30Mpa）
 		double f = 1.875;
 		double g = -7.5;
+
+		private void Form1_Load(object sender, EventArgs e)
+		{
+			try
+			{
+				//温度压力串口配置
+				busRtuClient.SerialPortInni(sp =>
+				{
+					port4();
+
+					#region 温度串口配置
+
+					//sp.PortName = "COM6";
+					//sp.BaudRate = 9600;
+					//sp.DataBits = 8;
+					//sp.StopBits = System.IO.Ports.StopBits.One;
+					//sp.Parity = System.IO.Ports.Parity.None;
+					#endregion
+				});
+				//打开串口
+				busRtuClient.Open();
+			}
+			catch (Exception ex)
+			{
+				Common.LogHandler.WriteLog("温度串口获取失败");
+			}
+			TemperatureValue();
+
+			PressureValue();
+
+
+			//电压端口
+			try
+			{
+				Modbus_dianya.SerialPortInni(sp =>
+				{
+					port6();
+
+					#region 电压串口配置
+					//sp.PortName = "COM6";
+					//sp.BaudRate = 2400;
+					//sp.DataBits = 8;
+					//sp.StopBits = System.IO.Ports.StopBits.One;
+					//sp.Parity = System.IO.Ports.Parity.Even;
+					#endregion
+				});
+
+				VoltageValue();
+			}
+			catch (Exception ex)
+			{
+				Common.LogHandler.WriteLog("电压串口获取失败");
+			}
+		}
+
 
 		/// <summary>
 		/// MQTT连接服务器
@@ -140,63 +205,6 @@ namespace DataCollection
 			var appMsg = new MqttApplicationMessage(topic, Encoding.UTF8.GetBytes(inputString), MqttQualityOfServiceLevel.AtMostOnce, false);
 			mqttClient.PublishAsync(appMsg);
 		}
-
-
-		private void Form1_Load(object sender, EventArgs e)
-		{
-			try
-			{
-				//温度压力串口配置
-				busRtuClient.SerialPortInni(sp =>
-				{
-					port4();
-
-					#region 温度串口配置
-
-					//sp.PortName = "COM6";
-					//sp.BaudRate = 9600;
-					//sp.DataBits = 8;
-					//sp.StopBits = System.IO.Ports.StopBits.One;
-					//sp.Parity = System.IO.Ports.Parity.None;
-					#endregion
-				});
-				//打开串口
-				busRtuClient.Open();
-			}
-			catch (Exception ex)
-			{
-				Common.LogHandler.WriteLog("温度串口获取失败");
-			}
-
-			portconfigure();
-
-			Pressure();
-
-
-			//电压端口
-			try
-			{
-				Modbus_dianya.SerialPortInni(sp =>
-				{
-					port6();
-
-					#region 电压串口配置
-					//sp.PortName = "COM6";
-					//sp.BaudRate = 2400;
-					//sp.DataBits = 8;
-					//sp.StopBits = System.IO.Ports.StopBits.One;
-					//sp.Parity = System.IO.Ports.Parity.Even;
-					#endregion
-				});
-
-				Voltage();
-			}
-			catch (Exception ex)
-			{
-				Common.LogHandler.WriteLog("电压串口获取失败");
-			}
-		}
-
 
 
 		/// <summary>
@@ -351,7 +359,7 @@ namespace DataCollection
 		/// <summary>
 		/// 温度值
 		/// </summary>
-		private void portconfigure()
+		private void TemperatureValue()
 		{
 			try
 			{
@@ -383,10 +391,40 @@ namespace DataCollection
 					double wd_d3 = Convert.ToInt32(wd_h3, 16);
 					double wd_d4 = Convert.ToInt32(wd_h4, 16);
 
-					//电流值
-					decimal ElectricCurrent_d = Math.Round(((decimal)wd_d3 / 1000), 2);
-					temperature1 = k * (double)ElectricCurrent_d + b;
-					Console.WriteLine(temperature1);
+
+					#region -50-+100温度测试
+					//decimal ElectricCurrent_d = Math.Round(((decimal)wd_d3 / 1000), 2);
+					//Temperature = k * (double)ElectricCurrent_d + b;
+					//Console.WriteLine(Temperature);
+					#endregion
+
+					//温度(0-300)1路
+					decimal ElectricCurrent_d1 = Math.Round(((decimal)wd_d1 / 1000), 2);
+					double Temperature01 = h * (double)ElectricCurrent_d1 + j;
+					double Temperature_01 = ((double)(ElectricCurrent_d1 - 4) * 300) / 16;
+					Console.WriteLine(Temperature01);
+					Console.WriteLine(Temperature_01);
+
+					//温度(0-300)2路
+					decimal ElectricCurrent_d2 = Math.Round(((decimal)wd_d2 / 1000), 2);
+					double Temperature02 = h * (double)ElectricCurrent_d2 + j;
+					double Temperature_02 = ((double)(ElectricCurrent_d2 - 4) * 300) / 16;
+					Console.WriteLine(Temperature02);
+					Console.WriteLine(Temperature_02);
+
+					//温度(0-1000)3路
+					decimal ElectricCurrent_d3 = Math.Round(((decimal)wd_d3 / 1000), 2);
+					double Temperature03 = y * (double)ElectricCurrent_d3 + z;
+					double Temperature_03 = ((double)(ElectricCurrent_d3 - 4) * 300) / 16;
+					Console.WriteLine(Temperature03);
+					Console.WriteLine(Temperature_03);
+
+					//温度(0-1000)4路
+					decimal ElectricCurrent_d4 = Math.Round(((decimal)wd_d4 / 1000), 2);
+					double Temperature04 = y * (double)ElectricCurrent_d4 + z;
+					double Temperature_04 = ((double)(ElectricCurrent_d4 - 4) * 300) / 16;
+					Console.WriteLine(Temperature04);
+					Console.WriteLine(Temperature_04);
 				}
 
 				else
@@ -406,7 +444,7 @@ namespace DataCollection
 		/// <summary>
 		/// 压力值
 		/// </summary>
-		private void Pressure()
+		private void PressureValue()
 		{
 			try
 			{
@@ -439,9 +477,35 @@ namespace DataCollection
 					double Pressure_d3 = Convert.ToInt32(Pressure_h3, 16);
 					double Pressure_d4 = Convert.ToInt32(Pressure_h4, 16);
 					
-					decimal ElectricCurrent3 = Math.Round(((decimal)Pressure_d3 / 1000), 2);
-					double Pr03 = f * (double)ElectricCurrent3 + g;
-					Console.WriteLine(Pr03);
+					//量程（0-1Mpa）1路
+					decimal ElectricCurrent_d1 = Math.Round(((decimal)Pressure_d1 / 1000), 2);
+					double Pressure01 = f * (double)ElectricCurrent_d1 + g;
+					double Pressure_01 = ((double)ElectricCurrent_d1 - 4) / 16;
+					Console.WriteLine(Pressure01);
+					Console.WriteLine(Pressure_01);
+
+					//量程（0-1Mpa）2路
+					decimal ElectricCurrent_d2 = Math.Round(((decimal)Pressure_d2 / 1000), 2);
+					double Pressure02 = f * (double)ElectricCurrent_d2 + g;
+					double Pressure_02 = ((double)ElectricCurrent_d2 - 4) / 16;
+					Console.WriteLine(Pressure02);
+					Console.WriteLine(Pressure_02);
+
+
+					//量程（0-30Mpa）3路
+					decimal ElectricCurrent_d3 = Math.Round(((decimal)Pressure_d3 / 1000), 2);
+					double Pressure03 = a * (double)ElectricCurrent_d3 + c;
+					double Pressure_03 = ((double)ElectricCurrent_d3 - 4) * 30 / 16;
+					Console.WriteLine(Pressure03);
+					Console.WriteLine(Pressure_03);
+
+					//量程（0-30Mpa）4路
+					decimal ElectricCurrent_d4 = Math.Round(((decimal)Pressure_d3 / 1000), 2);
+					double Pressure04 = a * (double)ElectricCurrent_d4 + c;
+					double Pressure_04 = ((double)(ElectricCurrent_d4 - 4) * 30 )/ 16;
+					Console.WriteLine(Pressure04);
+					Console.WriteLine(Pressure_04);
+
 				}
 				else
 				{
@@ -457,7 +521,7 @@ namespace DataCollection
 		/// <summary>
 		/// 电压值
 		/// </summary>
-		private void Voltage()
+		private void VoltageValue()
 		{
 			try
 			{
