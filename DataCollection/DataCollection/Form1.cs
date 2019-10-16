@@ -44,7 +44,12 @@ namespace DataCollection
 		decimal Voltage02 = 0;
 		decimal Voltage04 = 0;
 
+		//温度线程方法
+		Thread DateTimeThreadClass = null;
+		ThreadStart DateTimeThreadFunction = null;
+		Common.TimmerHandler TTimerClass = null;
 
+		static string mc_DefaultSignal = Common.ConfigFileHandler.GetAppConfig("UploadDataIntervalMilliseconds");
 
 		public Form1()
 		{
@@ -87,6 +92,7 @@ namespace DataCollection
 		{
 			try
 			{
+				
 				//温度压力串口配置
 				busRtuClient.SerialPortInni(sp =>
 				{
@@ -100,25 +106,20 @@ namespace DataCollection
 					//sp.StopBits = System.IO.Ports.StopBits.One;
 					//sp.Parity = System.IO.Ports.Parity.None;
 					#endregion
+
+					DateTimeThreadFunction = new ThreadStart(DateTimeTimer);
+					DateTimeThreadClass = new Thread(DateTimeThreadFunction);
+					DateTimeThreadClass.Start();
 				});
 				//打开串口
 				busRtuClient.Open();
+				
 			}
 			catch (Exception ex)
 			{
 				Common.LogHandler.WriteLog("温度压力串口获取失败");
 			}
 
-			try
-			{
-				TemperatureValue();
-			}
-			catch (Exception ex)
-			{
-				Common.LogHandler.WriteLog("温度值获取失败");
-
-				throw;
-			}
 
 			try
 			{
@@ -169,6 +170,62 @@ namespace DataCollection
 			}
 		}
 
+		private void DateTimeTimer()
+		{
+			try
+			{
+				TTimerClass = new Common.TimmerHandler(5000, true, (o, a) =>
+				{
+					GetMachineTemperature();
+
+				}, true);
+			}
+			catch (Exception ex)
+			{
+				TTimerClass = null;
+			}
+		}
+
+		private delegate void GetMachineTemperatureDelegate();
+		private void GetMachineTemperature()
+		{
+			try
+			{
+				if (this.InvokeRequired)
+				{
+					try
+					{
+						this.Invoke(new GetMachineTemperatureDelegate(GetMachineTemperature));
+					}
+					catch (Exception ex)
+					{
+						//响铃并显示异常给用户
+						System.Media.SystemSounds.Beep.Play();
+					}
+				}
+				else
+				{
+					try
+					{
+						
+						TemperatureValue();
+						txt_wendu.Text = Temperature03_04.ToString();
+
+					}
+					catch (Exception ex)
+					{
+						//响铃并显示异常给用户
+						System.Media.SystemSounds.Beep.Play();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				//ShowErrorMessage(ex.Message, "获取当前机器温度");
+				//Common.LogHandler.WriteLog("获取当前机器温度", ex);
+				//MachineTemperatureTimerClass = null;
+			}
+		}
 
 		/// <summary>
 		/// MQTT连接服务器
@@ -667,6 +724,9 @@ namespace DataCollection
 				Common.LogHandler.WriteLog("电压地址读取失败");
 			}
 		}
-	}
 
+		
+
+		
+	}
 }
